@@ -1,3 +1,4 @@
+import { off } from "process";
 import pool from "../config/db";
 
 export const PostModel = {
@@ -12,15 +13,21 @@ export const PostModel = {
     return result.rows[0];
   },
 
-  async getAll() {
+  async getAll(limit: number, offset: number) {
     const result = await pool.query(
       `SELECT p.*, u.username AS author_name
        FROM posts p
        JOIN users u ON p.author_id = u.id
-       ORDER BY p.created_at DESC`
+       ORDER BY p.created_at DESC
+       LIMIT $1 OFFSET $2`, [limit, offset]
     );
 
     return result.rows;
+  },
+
+  async count() {
+    const result = await pool.query(`SELECT COUNT(*) FROM posts`);
+    return parseInt(result.rows[0].count, 10);
   },
 
   async getById(id: number) {

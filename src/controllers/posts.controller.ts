@@ -1,10 +1,62 @@
 import { Request, Response, NextFunction } from "express";
 import { PostModel } from "../models/PostModel";
 
-export const getPosts = async (_req: Request, res: Response) => {
-  const posts = await PostModel.getAll();
-  res.json(posts);
+export const getPosts = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 15;
+
+    const offset = (page - 1) * limit;
+
+    const posts = await PostModel.getAll(limit, offset);
+
+    const totalPosts = await PostModel.count();
+    const totalPages = Math.ceil(totalPosts / limit);
+    const remainingPosts = Math.max(totalPosts - (offset + limit), 0)
+
+    res.json({
+      page,
+      limit,
+      totalPosts,
+      totalPages,
+      remainingPosts,
+      posts,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Error fetching posts" });
+  }
 };
+
+export const getRandomPosts = async (req: Request, res: Response) => {
+  try {
+    const seed = parseInt(req.query.seed as string) || 0;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 15;
+
+    const offset = seed + (page - 1) * limit;
+
+    const totalPosts = await PostModel.count();
+
+    if (seed >= totalPosts) return res.status(400).json({ error: "Seed is out of range (must be less than totalPosts)" });
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    const posts = await PostModel.getAll(limit, offset);
+
+    const remainingPosts = Math.max(totalPosts - (offset + limit), 0)
+
+    res.json({
+      seed, //seed значение
+      page, //номер страницы
+      limit, //колво постов на странице
+      totalPosts, //полное колво постов
+      totalPages, //полное колво страниц
+      remainingPosts, //оставшееся колво постов
+      posts, //массив постов этой страницы
+    });
+  } catch (err) {
+    res.status(500).json({ error: " Error fetching random posts" });
+  }
+}
 
 export const getPostById = async (req: Request, res: Response) => {
   const post = await PostModel.getById(Number(req.params.id));
