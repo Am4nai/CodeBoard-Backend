@@ -40,6 +40,17 @@ export const getCommentsByPost = async (req: Request, res: Response) => {
   }
 };
 
+export const getCommentCount = async (req: Request, res: Response) => {
+  try {
+    const { postId } = req.params;
+    const count = (await CommentModel.countByPostId(Number(postId)));
+    res.json(count);
+  } catch (err) {
+    console.error(error);
+    res.status(500).json({ error: "Error receiving count comments" });
+  }
+};
+
 export const updateComment = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

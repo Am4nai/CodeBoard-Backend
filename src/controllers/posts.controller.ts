@@ -56,13 +56,20 @@ export const getRandomPosts = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: " Error fetching random posts" });
   }
-}
+};
+
+export const getCount = async (req: Request, res: Response) => {
+  const totalPosts = await PostModel.count();
+  res.json({
+    totalPosts
+  });
+};
 
 export const getPostById = async (req: Request, res: Response) => {
   const post = await PostModel.getById(Number(req.params.id));
   if (!post) return res.status(404).json({ error: "Post not found" });
   res.json(post);
-}
+};
 
 export const createPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -81,7 +88,7 @@ export const createPost = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export const updatePost = async(req: Request, res: Response) => {
+export const updatePost = async (req: Request, res: Response) => {
   const { id } = req.params;
   const post = await PostModel.getById(Number(id));
   if (!post) return res.status(404).json({ error: "Post not found" });
@@ -90,9 +97,18 @@ export const updatePost = async(req: Request, res: Response) => {
     return res.status(403).json({ error: "Forbidden" });
   }
 
-  const updated = await PostModel.update(Number(id), req.body);
+  const { title, code, language, description } = req.body;
+
+  const updated = await PostModel.update(
+    Number(id),
+    title,
+    code,
+    language,
+    description
+  );
+
   res.json(updated);
-}
+};
 
 export const deletePost = async(req: Request, res: Response) => {
   const { id } = req.params;
@@ -105,4 +121,28 @@ export const deletePost = async(req: Request, res: Response) => {
 
   await PostModel.delete(Number(id));
   res.json({ message: "Post deleted" });
-}
+};
+
+export const searchPosts = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const query = String(req.query.query || "").trim();
+
+    // безопасное приведение типов
+    const pageRaw = Number(req.query.page);
+    const limitRaw = Number(req.query.limit);
+
+    const page = !isNaN(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+    const limit = !isNaN(limitRaw) && limitRaw > 0 ? limitRaw : 15;
+
+    if (!query) {
+      return res.status(400).json({ error: "Search query is required" });
+    }
+
+    const posts = await PostModel.search(query, page, limit);
+    res.status(200).json({ posts });
+  } catch (err) {
+    console.error("Error searching posts:", err);
+    next(err);
+  }
+};
+

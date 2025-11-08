@@ -23,6 +23,15 @@ export const CommentModel = {
     return result.rows;
   },
 
+  async countByPostId(postId: number) {
+    const result = await pool.query(
+      `SELECT COUNT(*) FROM comments WHERE post_id = $1;`, [postId]
+    );
+
+    return result.rows[0];
+  },
+
+
   async update(id: number, authorId: number, content: string) {
     const result = await pool.query(
       `UPDATE comments

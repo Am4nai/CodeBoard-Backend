@@ -4,13 +4,15 @@ import {
   createComment,
   getCommentsByPost,
   updateComment,
-  deleteComment
+  deleteComment,
+  getCommentCount
 } from "../controllers/comments.controller";
 
 const router = Router();
 
 router.post("/", authMiddleware, createComment);
 router.get("/post/:postId", getCommentsByPost);
+router.get("/post/:postId/count", getCommentCount);
 router.put("/:id", authMiddleware, updateComment);
 router.delete("/:id", authMiddleware, deleteComment);
 
