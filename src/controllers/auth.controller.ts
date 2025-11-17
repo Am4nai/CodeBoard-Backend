@@ -9,6 +9,15 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || "1d") as StringValue;
 const BCRYPT_SALT_ROUNDS = Number(process.env.BCRYPT_SALT_ROUNDS || "12");
 
+export const verifyToken = async (req: Request, res: Response) => {
+  try {
+    const user = req.user; // уже расшифрованный JWT
+    return res.status(200).json({ valid: true, user });
+  } catch (err) {
+    return res.status(401).json({ valid: false });
+  }
+};
+
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const {username, email, password} = req.body;
