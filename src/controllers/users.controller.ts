@@ -32,6 +32,32 @@ export const getUserPosts = async (req: Request, res: Response) => {
   res.json({ userId, total: posts.length, posts });
 };
 
+export const searchUsers = async (req: Request, res: Response) => {
+  try {
+    const query = req.query.query as string;
+
+    if (!query || query.trim().length === 0) {
+      return res.json({ results: [] });
+    }
+
+    const result = await pool.query(
+      `
+        SELECT id, username, avatar_url
+        FROM users
+        WHERE username ILIKE $1
+        ORDER BY username ASC
+        LIMIT 20
+      `,
+      [`%${query}%`]
+    );
+
+    return res.json({ results: result.rows });
+  } catch (error) {
+    console.error("searchUsers error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);

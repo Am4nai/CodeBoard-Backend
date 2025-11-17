@@ -133,12 +133,19 @@ export const searchPosts = async (req: Request, res: Response, next: NextFunctio
 
     const page = !isNaN(pageRaw) && pageRaw > 0 ? pageRaw : 1;
     const limit = !isNaN(limitRaw) && limitRaw > 0 ? limitRaw : 15;
+    const raw = String(req.query.query || "");
+    const parts = raw.split(" ").filter(Boolean);
 
-    if (!query) {
+    const tags = parts.filter(w => w.startsWith("#")).map(w => w.slice(1));
+    const textParts = parts.filter(w => !w.startsWith("#"));
+    const textQuery = textParts.join(" ");
+
+
+    if (!textQuery && tags.length === 0) {
       return res.status(400).json({ error: "Search query is required" });
     }
 
-    const posts = await PostModel.search(query, page, limit);
+    const posts = await PostModel.search(textQuery, tags, page, limit);
     res.status(200).json({ posts });
   } catch (err) {
     console.error("Error searching posts:", err);
